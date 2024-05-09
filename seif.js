@@ -1,7 +1,7 @@
 var inputElement = document.getElementById("input");
 inputElement.addEventListener("change", handleFiles, false);
-var canvas1 = document.getElementById('canv0');
-var ctx1 = canvas1.getContext('2d');
+var canv1 = document.getElementById('canv0');
+var ctx1 = canv1.getContext('2d');
 
 function handleFiles(e) {
 	var file = e.target.files[0];
@@ -11,36 +11,58 @@ function handleFiles(e) {
 }
 
 function processImage(e) {
-	var buffer = e.target.result;
-	var seif = parseSEIF(buffer);
+	var seif = parseSEIF(e);
 	var imageData = convertToImageData(seif);
 	ctx1.putImageData(imageData, 0, 0);
 }
 
-function parseSEIF(buffer) {
+function parseSEIF(e) {
+	var buffer = e.target.result;
 	var datav = new DataView(buffer);
 	var seif = {};
 
+	//
+	// ----------------------
+	// [OFF:END] | Name
+	// ----------------------
+	// <HEADER>
+	// - [00:04] | Magic
+	// - [04:05] | Flags
+	// - [05:06] | Encoding
+	// - [16:1A] | Chunk Count
+	// - [1A:1E] | Chunk Size
+	//
+	// <METADATA>
+	// - [06:0E] | Signature
+	// - [0E:12] | Width
+	// - [12:16] | Height
+	//
+	//
+
 	seif.header = {};
 	seif.header.magic = new Uint8Array(buffer, 0, 4);
-	console.log("seif.header.magic: " + seif.header.magic);
 	seif.header.flags = datav.getUint8(4);
-	console.log("seif.header.flags: " + seif.header.flags);
 	seif.header.encoding = datav.getUint8(5);
-	console.log("seif.header.encoding: " + seif.header.encoding);
 	seif.header.chunk_count = datav.getUint32(22, true);
-	console.log("seif.header.chunk_count: " + seif.header.chunk_count);
 	seif.header.chunk_size = datav.getUint32(26, true);
-	console.log("seif.header.chunk_size: " + seif.header.chunk_size);
 
 	seif.metadata = {};
 	seif.metadata.signature = new Uint8Array(buffer, 6, 8);
-	console.log("seif.metadata.signature: " + seif.metadata.signature);
 	seif.metadata.width = datav.getUint32(14, true);
-	console.log("seif.metadata.width: " + seif.metadata.width);
 	seif.metadata.height = datav.getUint32(18, true);
-	console.log("seif.metadata.height: " + seif.metadata.height);
+
 	seif.pixels = new Uint8Array(buffer, 30);
+
+	// print out debug info
+	console.log("seif.header.magic: " + seif.header.magic);
+	console.log("seif.header.flags: " + seif.header.flags);
+	console.log("seif.header.encoding: " + seif.header.encoding);
+	console.log("seif.header.chunk_count: " + seif.header.chunk_count);
+	console.log("seif.header.chunk_size: " + seif.header.chunk_size);
+	console.log("seif.metadata.signature: " + seif.metadata.signature);
+	console.log("seif.metadata.width: " + seif.metadata.width);
+	console.log("seif.metadata.height: " + seif.metadata.height);
+
 	return seif;
 }
 
