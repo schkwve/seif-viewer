@@ -31,11 +31,17 @@ function parseSEIF(e) {
 	// - [05:06] | Encoding
 	// - [16:1A] | Chunk Count
 	// - [1A:1E] | Chunk Size
+	// - [1E:26] | First chunk header
+	// - [26:--] | Data
 	//
 	// <METADATA>
 	// - [06:0E] | Signature
 	// - [0E:12] | Width
 	// - [12:16] | Height
+	//
+	// <CHUNK>
+	// - [--:--] | Height
+	// - [--:--] | Width
 	//
 	//
 
@@ -51,7 +57,12 @@ function parseSEIF(e) {
 	seif.metadata.width = datav.getUint32(14, true);
 	seif.metadata.height = datav.getUint32(18, true);
 
-	seif.pixels = new Uint8Array(buffer, 30);
+	// @todo: iterate through all chunks
+	seif.chunk = {};
+	seif.chunk.width = datav.getUint32(30, true);
+	seif.chunk.height = datav.getUint32(34, true);
+
+	seif.pixels = new Uint8Array(buffer, 38);
 
 	// print out debug info
 	console.log("seif.header.magic: " + seif.header.magic);
